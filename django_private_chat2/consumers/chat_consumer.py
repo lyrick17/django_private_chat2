@@ -141,7 +141,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 elif data['file_ids'] == '':
                     return ErrorTypes.FileMessageInvalid, "'file_ids' should not be blank"
                 elif not isinstance(data['file_ids'], list):
-                    return ErrorTypes.FileMessageInvalid, "'file_ids' should be a string"
+                    return ErrorTypes.FileMessageInvalid, "'file_ids' should be a list of file_id"
                 elif not isinstance(data['user_pk'], str):
                     return ErrorTypes.InvalidUserPk, "'user_pk' should be a string"
                 elif not isinstance(data['random_id'], int):
@@ -162,10 +162,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         if not file:
                             return ErrorTypes.FileDoesNotExist, f"File with id {file_id} does not exist"
                         else:
-                            file = serialize_file_model(file)
-                            files.append(file)
+                            serialized_file = serialize_file_model(file)
+                            files.append(serialized_file)
 
-                    logger.info(f"DB check if file {file_id} exists resulted in {file}")
                     recipient: Optional[AbstractBaseUser] = await get_user_by_pk(user_pk)
                     logger.info(f"DB check if user {user_pk} exists resulted in {recipient}")
                     if not recipient:
@@ -174,9 +173,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         logger.info(f"Will save file message from {self.user} to {recipient}")
                         msg = await save_files_message(files, from_=self.user, to=recipient)
                         await self._after_message_save(msg, rid=rid, user_pk=user_pk)
-                        logger.info(f"Sending file message for file {file_id} from {self.user} to {recipient}")
                         # We don't need to send random_id here because we've already saved the file to db
-
                         await self.channel_layer.group_send(user_pk,
                                                             OutgoingEventNewFileMessage(db_id=msg.id,
                                                                                         files=files,
@@ -229,8 +226,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                             if not file:
                                 return ErrorTypes.FileDoesNotExist, f"File with id {file_id} does not exist"
                             else:
-                                file = serialize_file_model(file)
-                                files.append(file)
+                                serialized_file = serialize_file_model(file)
+                                files.append(serialized_file)
 
                     logger.info(f"Validation passed, sending text message from {self.group_name} to {user_pk}")
                     await self.channel_layer.group_send(user_pk, OutgoingEventNewTextMessage(random_id=rid,
