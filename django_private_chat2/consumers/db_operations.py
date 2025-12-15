@@ -53,10 +53,12 @@ def save_text_message(text: str, files: Optional[list[UploadedFile]], from_: Abs
     message = MessageModel.objects.create(text=text, sender=from_, recipient=to)
 
     if files:
-        message.file.aset(files)
+        message.file.set(files)
     return message
 
 
 @database_sync_to_async
 def save_files_message(file: list[UploadedFile], from_: AbstractBaseUser, to: AbstractBaseUser) -> Awaitable[MessageModel]:
-    return MessageModel.objects.create(file=file, sender=from_, recipient=to)
+    messages = MessageModel.objects.create(sender=from_, recipient=to)
+    messages.file.set(file)
+    return messages
