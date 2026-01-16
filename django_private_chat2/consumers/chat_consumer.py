@@ -231,8 +231,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             elif msg_type == MessageTypes.TextMessage:
                 # TextMessage now can also accepts multiple files
                 data: MessageTypeTextMessage
-                if 'text' not in data:
-                    return ErrorTypes.MessageParsingError, "'text' not present in data"
+                if 'textstring' not in data:
+                    return ErrorTypes.MessageParsingError, "'textstring' not present in data"
                 elif 'user_pk' not in data:
                     return ErrorTypes.MessageParsingError, "'user_pk' not present in data"
                 elif 'random_id' not in data:
